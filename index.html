@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Surallah Agri-MSME Connect</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#1044A3;--primary2:#1A5CC8;--primary-pale:#E8EFFE;--primary-border:#b3caee;
+  --accent:#0A7ABF;--accent2:#0C8ED6;
+  --green:#1A7A3C;--green2:#228B46;--green-pale:#E8F5EE;--green-border:#b8dfc8;
+  --gold:#C9A84C;--gold-light:#F0D690;
+  --ink:#1C1C1C;--ink2:#4A4A4A;--ink3:#888;
+  --bg:#F0F4FC;--surface:#fff;--border:#D8E2F4;
+  --red:#B83030;--red-pale:#FDE8E8;
+  --nav:#071F5B;
+  --sidebar-w:290px;--dir-w:300px;
+}
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--bg)}
+
+/* ── Header ── */
+#header{position:fixed;top:0;left:0;right:0;height:58px;z-index:1100;background:var(--nav);border-bottom:3px solid var(--gold);display:flex;align-items:center;padding:0 16px;gap:10px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-box{width:34px;height:34px;background:linear-gradient(135deg,var(--primary2),var(--accent));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.logo-text h1{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:#fff;line-height:1.2}
+.logo-text span{font-size:10px;color:rgba(255,255,255,.6);display:block;letter-spacing:.02em}
+.spacer{flex:1}
+.hstat{text-align:center;color:#fff}
+.hstat b{display:block;font-size:17px;font-weight:600;color:var(--gold-light);line-height:1}
+.hstat small{font-size:10px;opacity:.65;text-transform:uppercase;letter-spacing:.05em}
+.hsep{width:1px;height:32px;background:rgba(255,255,255,.18);margin:0 6px}
+.hbtn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;padding:5px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:background .15s;white-space:nowrap}
+.hbtn:hover{background:rgba(255,255,255,.24)}
+.hbtn.gold{background:var(--gold);border-color:var(--gold);color:var(--ink);font-weight:600}
+.hbtn.gold:hover{background:var(--gold-light)}
+
+/* ── Layout ── */
+#app{display:flex;height:100%;padding-top:58px}
+#sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:900}
+#sidebar-top{padding:12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.search-box{position:relative}
+.search-box input{width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--bg);transition:border-color .2s}
+.search-box input:focus{outline:none;border-color:var(--primary)}
+.si{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none}
+.filter-label{font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;user-select:none;border:1.5px solid var(--border);background:var(--bg);color:var(--ink2);transition:all .15s;white-space:nowrap}
+.chip:hover{border-color:var(--primary);color:var(--primary)}
+.chip.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* Type filter tabs */
+.type-tabs{display:flex;gap:4px}
+.type-tab{flex:1;padding:5px 6px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--ink3);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px}
+.type-tab:hover{border-color:var(--primary);color:var(--primary)}
+.type-tab.on[data-type="All"]{background:var(--primary);color:#fff;border-color:var(--primary)}
+.type-tab.on[data-type="Farmer"]{background:#1A7A3C;color:#fff;border-color:#1A7A3C}
+.type-tab.on[data-type="MSME"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+#msme-list{flex:1;overflow-y:auto;padding:6px}
+.mcard{padding:10px 12px;border-radius:10px;cursor:pointer;border:1.5px solid transparent;margin-bottom:4px;display:flex;align-items:flex-start;gap:10px;transition:all .15s}
+.mcard:hover{background:var(--primary-pale);border-color:var(--primary-border)}
+.mcard.active{background:var(--primary-pale);border-color:var(--primary)}
+.mcard-logo{width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--border);background:var(--bg)}
+.mcard-logo-fb{width:36px;height:36px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;border:1px solid var(--border)}
+.mcard-info{min-width:0;flex:1}
+.mcard-name{font-size:12px;font-weight:600;line-height:1.3;color:var(--ink)}
+.mcard-type-badge{display:inline-flex;align-items:center;gap:3px;margin-top:2px;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.mcard-type-badge.farmer{background:#E8F5EE;color:#1A7A3C}
+.mcard-type-badge.msme{background:var(--primary-pale);color:var(--primary)}
+.mcard-cat{font-size:11px;color:var(--ink3);margin-top:1px}
+.mcard-prods{font-size:11px;color:var(--primary);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.no-results{text-align:center;padding:2.5rem 1rem;color:var(--ink3);font-size:13px}
+#sidebar-foot{padding:8px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--ink3);text-align:center}
+
+/* ── Connect Banner ── */
+#connect-banner{padding:10px 12px;background:linear-gradient(135deg,#071F5B,#1044A3);color:#fff;font-size:11px;line-height:1.5;border-bottom:1px solid var(--border);flex-shrink:0}
+#connect-banner strong{display:block;font-size:12px;color:var(--gold-light);margin-bottom:2px}
+
+/* ── Directions panel ── */
+#dir-panel{width:0;flex-shrink:0;overflow:hidden;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:890;transition:width .32s cubic-bezier(.4,0,.2,1);box-shadow:3px 0 16px rgba(0,0,0,.07)}
+#dir-panel.open{width:var(--dir-w)}
+#dir-inner{width:var(--dir-w);display:flex;flex-direction:column;height:100%}
+.dir-head{background:var(--primary);padding:12px 14px;color:#fff;flex-shrink:0;display:flex;align-items:flex-start;gap:8px}
+.dir-head-text{flex:1;min-width:0}
+.dir-head h3{font-family:'Playfair Display',serif;font-size:14px;font-weight:700}
+.dir-dest{font-size:11px;opacity:.8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dir-close-btn{background:rgba(255,255,255,.18);border:none;color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dir-close-btn:hover{background:rgba(255,255,255,.3)}
+.dir-from-to{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.dir-point{display:flex;align-items:flex-start;gap:8px;padding:3px 0}
+.dir-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.dir-dot.from{background:var(--green);box-shadow:0 0 0 2px rgba(26,122,60,.25)}
+.dir-dot.to{background:var(--primary);box-shadow:0 0 0 2px rgba(16,68,163,.25)}
+.dir-line-connector{width:1.5px;height:10px;background:var(--border);margin-left:4px}
+.dir-point-wrap{flex:1;min-width:0}
+.dir-point-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+.dir-point-val{font-size:12px;font-weight:500;color:var(--ink);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dir-mode-row{padding:8px 10px;border-bottom:1px solid var(--border);display:flex;gap:5px;flex-shrink:0}
+.mode-btn{flex:1;padding:5px 2px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;color:var(--ink3);transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px}
+.mode-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.mode-btn:hover:not(.active){border-color:var(--primary);color:var(--primary)}
+.mode-icon{font-size:14px}
+.dir-summary{padding:10px 12px;border-bottom:1px solid var(--border);background:var(--primary-pale);flex-shrink:0;display:none}
+.dir-summary-row{display:flex;justify-content:space-between;align-items:center}
+.dir-dist-big{font-size:20px;font-weight:700;color:var(--primary)}
+.dir-time-big{font-size:13px;color:var(--ink2);font-weight:600}
+.dir-steps{flex:1;overflow-y:auto;padding:6px}
+.step-item{display:flex;align-items:flex-start;gap:8px;padding:7px 8px;border-radius:8px;margin-bottom:2px;transition:background .15s}
+.step-item.current{background:var(--primary-pale);border-left:3px solid var(--primary)}
+.step-icon{width:26px;height:26px;border-radius:50%;background:var(--primary-pale);border:1px solid #c5d8ea;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px}
+.step-icon.active-step{background:var(--primary);color:#fff;border-color:var(--primary)}
+.step-body{flex:1;min-width:0}
+.step-text{font-size:11px;color:var(--ink2);line-height:1.5}
+.step-dist{font-size:10px;color:var(--ink3);margin-top:1px}
+.dir-status{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:2rem 1rem;color:var(--ink3);font-size:13px;text-align:center;flex:1}
+.dir-spinner{width:26px;height:26px;border:2.5px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.dir-footer{padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:7px}
+.start-nav-btn{width:100%;padding:11px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+.start-nav-btn:hover{background:var(--primary2)}
+.start-nav-btn.navigating{background:#b83030}
+.gmaps-btn-link{width:100%;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg);color:var(--ink2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:all .15s}
+.gmaps-btn-link:hover{background:var(--primary-pale);color:var(--primary);border-color:var(--primary-border)}
+
+/* ── Nav Overlay ── */
+#nav-overlay{display:none;position:fixed;inset:0;z-index:3000;pointer-events:none}
+#nav-overlay.active{display:block}
+#nav-top{position:absolute;top:0;left:0;right:0;background:#1044A3;color:#fff;pointer-events:all;box-shadow:0 4px 24px rgba(0,0,0,.32);border-radius:0 0 20px 20px;overflow:hidden;animation:slideDown .3s cubic-bezier(.4,0,.2,1)}
+@keyframes slideDown{from{transform:translateY(-110%)}to{transform:translateY(0)}}
+#nav-turn-banner{display:flex;align-items:stretch;min-height:90px}
+#nav-turn-left{width:96px;background:rgba(0,0,0,.20);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;flex-shrink:0;padding:14px 8px}
+#nav-turn-arrow{font-size:48px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+#nav-turn-dist-label{font-size:13px;font-weight:700;color:rgba(255,255,255,.92);letter-spacing:.02em;text-align:center}
+#nav-turn-right{flex:1;padding:16px 16px;min-width:0;display:flex;flex-direction:column;justify-content:center}
+#nav-turn-instruction{font-size:20px;font-weight:700;line-height:1.25;letter-spacing:-.01em}
+#nav-turn-road-name{font-size:13px;opacity:.72;margin-top:5px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nav-next-strip{background:rgba(0,0,0,.18);padding:8px 16px 10px;display:flex;align-items:center;gap:10px;font-size:13px}
+#nav-next-arrow{font-size:17px;opacity:.9;flex-shrink:0}
+#nav-next-text{opacity:.85;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nav-street-strip{background:rgba(255,255,255,.07);padding:5px 16px;font-size:11px;opacity:.65;display:flex;align-items:center;gap:5px}
+#nav-bottom{position:absolute;bottom:0;left:0;right:0;background:#fff;color:var(--ink);pointer-events:all;box-shadow:0 -4px 24px rgba(0,0,0,.14);border-radius:20px 20px 0 0;padding:18px 20px 22px;animation:slideUp .3s cubic-bezier(.4,0,.2,1)}
+@keyframes slideUp{from{transform:translateY(110%)}to{transform:translateY(0)}}
+#nav-bottom-row{display:flex;align-items:center;gap:12px}
+#nav-eta-block{display:flex;flex-direction:column;flex:1;min-width:0}
+#nav-eta-mins{font-size:36px;font-weight:800;color:var(--ink);line-height:1;letter-spacing:-.03em}
+#nav-eta-detail{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;color:var(--ink3)}
+#nav-eta-km{font-weight:700;color:var(--ink2)}
+#nav-dest-chip{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:600;color:var(--ink2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+#nav-stop-btn{width:54px;height:54px;border-radius:50%;border:none;background:#EA4335;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(234,67,53,.38);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
+#nav-stop-btn:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(234,67,53,.5)}
+#nav-stop-btn:active{transform:scale(.93)}
+#nav-recenter{position:absolute;right:18px;bottom:120px;z-index:10;width:46px;height:46px;border-radius:50%;background:#fff;border:none;cursor:pointer;box-shadow:0 2px 14px rgba(0,0,0,.20);display:flex;align-items:center;justify-content:center;font-size:20px;pointer-events:all;transition:transform .15s}
+#nav-recenter:hover{transform:scale(1.1)}
+#nav-arrived{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:22px;width:min(340px,90vw);overflow:hidden;z-index:4000;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:popIn .4s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes popIn{from{transform:translate(-50%,-50%) scale(.7);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.arr-top{background:var(--primary);padding:28px 24px 22px;text-align:center;color:#fff}
+.arr-icon{font-size:50px;margin-bottom:8px}
+.arr-top h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:4px}
+.arr-top p{font-size:13px;opacity:.82}
+.arr-bottom{padding:18px 20px 22px;text-align:center}
+.arr-done-btn{width:100%;padding:13px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer}
+.gps-dot-outer{width:22px;height:22px;border-radius:50%;background:rgba(16,68,163,.18);display:flex;align-items:center;justify-content:center;animation:gpsPulse 2s ease-in-out infinite}
+@keyframes gpsPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.55);opacity:.45}}
+.gps-dot-inner{width:13px;height:13px;border-radius:50%;background:#1044A3;border:2.5px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.32)}
+
+/* ── Map ── */
+#map{flex:1;z-index:1;min-width:0}
+
+/* ── Popup ── */
+.leaflet-popup-content-wrapper{border-radius:14px!important;padding:0!important;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.18)!important;border:1px solid var(--border)}
+.leaflet-popup-content{margin:0!important;width:270px!important;font-family:'DM Sans',sans-serif}
+.pu-head{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px}
+.pu-logo{width:42px;height:42px;border-radius:9px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;background:var(--bg)}
+.pu-logo-fb{width:42px;height:42px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;border:1px solid var(--border)}
+.pu-name{font-size:13px;font-weight:600;color:var(--ink);line-height:1.3}
+.pu-badge{display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;text-transform:uppercase}
+.pu-type-badge{display:inline-flex;align-items:center;gap:3px;margin-top:3px;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.pu-type-badge.farmer{background:#E8F5EE;color:#1A7A3C}
+.pu-type-badge.msme{background:var(--primary-pale);color:var(--primary)}
+.pu-body{padding:10px 14px}
+.pu-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:8px}
+.pu-prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.pu-prod-item{display:flex;flex-direction:column;align-items:center;gap:4px}
+.pu-prod-img{width:100%;aspect-ratio:1;border-radius:8px;object-fit:cover;border:1px solid var(--border);background:var(--bg)}
+.pu-prod-img-fb{width:100%;aspect-ratio:1;border-radius:8px;background:var(--primary-pale);border:1px solid var(--primary-border);display:flex;align-items:center;justify-content:center;font-size:20px}
+.pu-prod-name{font-size:10px;color:var(--ink2);text-align:center;line-height:1.3;font-weight:500;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pu-meta{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--ink3)}
+.pu-foot{padding:8px 14px;background:var(--bg);border-top:1px solid var(--border);display:flex;gap:5px}
+.pu-btn{flex:1;padding:7px 4px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer}
+.pu-btn:hover{background:var(--primary2)}
+.pu-dir-btn{flex:1;padding:7px 4px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer}
+.pu-dir-btn:hover{background:var(--accent2)}
+.pu-edit-btn{padding:7px 9px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;color:var(--ink2)}
+.pu-edit-btn:hover{border-color:var(--gold);color:var(--gold)}
+.leaflet-tooltip{background:var(--nav)!important;color:#fff!important;border:none!important;border-radius:7px!important;font-family:'DM Sans',sans-serif!important;font-size:12px!important;padding:5px 10px!important;box-shadow:0 2px 8px rgba(0,0,0,.25)!important;white-space:nowrap}
+.leaflet-tooltip-left::before{border-left-color:var(--nav)!important}
+.leaflet-tooltip-right::before{border-right-color:var(--nav)!important}
+
+/* ── Detail Panel ── */
+#detail{position:fixed;right:0;top:58px;bottom:0;width:360px;background:var(--surface);border-left:1px solid var(--border);z-index:1000;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;box-shadow:-4px 0 20px rgba(0,0,0,.08)}
+#detail.open{transform:translateX(0)}
+.dh{background:linear-gradient(135deg,var(--nav),var(--primary));padding:14px;display:flex;align-items:flex-start;gap:10px;color:#fff;position:relative}
+.dh-logo{width:52px;height:52px;border-radius:10px;object-fit:cover;border:2px solid rgba(255,255,255,.3);flex-shrink:0}
+.dh-logo-fb{width:52px;height:52px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;background:rgba(255,255,255,.15)}
+.dh-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;line-height:1.3}
+.dh-sub{font-size:11px;opacity:.75;margin-top:2px}
+.dh-close{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.dh-close:hover{background:rgba(255,255,255,.28)}
+.db{padding:14px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.ds h3{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:10px}
+.ds p{font-size:12px;color:var(--ink2);line-height:1.65}
+.prod-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.prod-gallery-item{display:flex;flex-direction:column;align-items:center;gap:5px}
+.prod-gallery-img{width:100%;aspect-ratio:1;border-radius:10px;object-fit:cover;border:1px solid var(--border);background:var(--bg)}
+.prod-gallery-img-fb{width:100%;aspect-ratio:1;border-radius:10px;background:var(--primary-pale);border:1px solid var(--primary-border);display:flex;align-items:center;justify-content:center;font-size:28px}
+.prod-gallery-name{font-size:11px;color:var(--ink);text-align:center;line-height:1.3;font-weight:600;width:100%}
+.irow{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.irow:last-child{border:none}
+.ikey{color:var(--ink3);flex-shrink:0;margin-right:8px}
+.ival{font-weight:600;color:var(--ink);text-align:right;word-break:break-word}
+
+/* Needs / Supplies section */
+.needs-section{padding:10px 12px;background:linear-gradient(135deg,#E8F5EE,#E8EFFE);border-radius:10px;border:1px solid var(--primary-border)}
+.needs-section h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary);margin-bottom:6px}
+.needs-tag{display:inline-flex;align-items:center;gap:4px;margin:2px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;background:#fff;border:1px solid var(--primary-border);color:var(--primary)}
+.supplies-tag{display:inline-flex;align-items:center;gap:4px;margin:2px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;background:#fff;border:1px solid var(--green-border);color:#1A7A3C}
+
+.cert-list{display:flex;flex-direction:column;gap:8px}
+.cert-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:10px}
+.cert-badge{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.cert-body{flex:1;min-width:0}
+.cert-name{font-size:12px;font-weight:600;color:var(--ink);line-height:1.3}
+.cert-status{display:inline-flex;align-items:center;gap:4px;margin-top:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.cert-status.registered{background:var(--primary-pale);color:var(--primary)}
+.cert-num{font-size:11px;color:var(--ink3);margin-top:3px}
+.cert-none{font-size:12px;color:var(--ink3);font-style:italic;text-align:center;padding:1rem 0}
+.action-row{display:flex;gap:7px}
+.d-dir-btn{flex:2;padding:10px;border-radius:9px;border:none;background:var(--primary);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.d-dir-btn:hover{background:var(--primary2)}
+.d-edit-btn{flex:1;padding:10px;border-radius:9px;border:1.5px solid var(--gold);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;color:var(--gold);font-weight:600}
+.d-edit-btn:hover{background:var(--gold);color:#fff}
+.d-copy-btn{width:100%;padding:10px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;color:var(--ink2)}
+.d-copy-btn:hover{background:var(--primary-pale);color:var(--primary);border-color:var(--primary-border)}
+.d-del-btn{width:100%;padding:10px;border-radius:9px;border:1.5px solid var(--red-pale);background:var(--red-pale);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;color:var(--red)}
+.d-del-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* ── Legend ── */
+#legend{position:fixed;bottom:20px;left:calc(var(--sidebar-w) + 8px);z-index:800;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:10px 14px;box-shadow:0 4px 20px rgba(0,0,0,.10);max-height:calc(100vh - 120px);overflow-y:auto;transition:left .32s cubic-bezier(.4,0,.2,1)}
+#legend.shifted{left:calc(var(--sidebar-w) + var(--dir-w) + 8px)}
+.leg-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:8px}
+.leg-item{display:flex;align-items:center;gap:7px;font-size:11px;margin-bottom:4px;cursor:pointer;padding:2px 0}
+.leg-item:hover{color:var(--primary)}
+.ldot{width:12px;height:12px;border-radius:50%;flex-shrink:0;border:2px solid rgba(0,0,0,.1)}
+
+/* ── Loading ── */
+#loading{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,var(--nav),var(--primary));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff}
+#loading h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700}
+#loading p{font-size:13px;opacity:.75}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+#saving-bar{position:fixed;top:58px;left:0;right:0;height:3px;background:var(--gold);z-index:1200;transform:scaleX(0);transform-origin:left;transition:transform .4s}
+#saving-bar.active{transform:scaleX(1)}
+
+/* ── Modal ── */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center;padding:1rem}
+#modal-overlay.open{display:flex}
+#modal{background:#fff;border-radius:16px;width:600px;max-width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column}
+.modal-head{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;background:#fff;z-index:1}
+.modal-head h2{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--ink)}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink3);line-height:1}
+.modal-body{padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+.modal-section{display:flex;flex-direction:column;gap:10px}
+.modal-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);padding-bottom:6px;border-bottom:1px solid var(--border)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em}
+.form-group input,.form-group select,.form-group textarea{padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--bg);transition:border-color .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary)}
+.form-group textarea{resize:vertical;min-height:72px}
+.form-hint{font-size:10px;color:var(--ink3);margin-top:2px;line-height:1.4}
+
+/* Type radio selector */
+.type-selector{display:flex;gap:8px}
+.type-radio-btn{flex:1;padding:10px 8px;border-radius:10px;border:2px solid var(--border);background:var(--bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s;font-family:'DM Sans',sans-serif}
+.type-radio-btn:hover{border-color:var(--primary)}
+.type-radio-btn.selected[data-t="Farmer"]{border-color:#1A7A3C;background:#E8F5EE}
+.type-radio-btn.selected[data-t="MSME"]{border-color:var(--primary);background:var(--primary-pale)}
+.type-radio-icon{font-size:22px}
+.type-radio-label{font-size:12px;font-weight:700;color:var(--ink)}
+.type-radio-desc{font-size:10px;color:var(--ink3);text-align:center;line-height:1.4}
+
+.prod-editor-list{display:flex;flex-direction:column;gap:8px}
+.prod-editor-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px}
+.prod-editor-img{width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.prod-editor-img-fb{width:36px;height:36px;border-radius:6px;background:var(--primary-pale);border:1px solid var(--primary-border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.prod-editor-fields{flex:1;min-width:0;display:flex;gap:6px}
+.prod-editor-fields input{flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink);background:var(--surface)}
+.prod-editor-fields input:focus{outline:none;border-color:var(--primary)}
+.prod-editor-fields input.url-input{font-size:11px;color:var(--ink3)}
+.prod-remove-btn{background:none;border:none;cursor:pointer;color:var(--ink3);font-size:16px;padding:2px;flex-shrink:0}
+.prod-remove-btn:hover{color:var(--red)}
+.add-prod-btn{padding:8px 12px;border-radius:8px;border:1.5px dashed var(--primary-border);background:var(--primary-pale);color:var(--primary);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;width:100%;transition:all .15s}
+.add-prod-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.featured-toggle{padding:3px 7px;border-radius:20px;font-size:10px;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--ink3);transition:all .15s;white-space:nowrap;flex-shrink:0}
+.featured-toggle.on{background:var(--gold);color:#fff;border-color:var(--gold)}
+.cert-toggle{width:36px;height:20px;border-radius:20px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;border:none}
+.cert-toggle.on{background:var(--primary)}
+.cert-toggle::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.cert-toggle.on::after{left:18px}
+.loc-hint{font-size:11px;color:var(--ink3);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;line-height:1.5}
+.loc-hint a{color:var(--primary);text-decoration:none;font-weight:600}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;position:sticky;bottom:0;background:#fff}
+.btn-cancel{padding:9px 18px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;color:var(--ink2)}
+.btn-save{padding:9px 22px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.btn-save:hover{background:var(--primary2)}
+.btn-save:disabled{opacity:.6;cursor:not-allowed}
+
+/* Toast */
+#toast{position:fixed;bottom:20px;right:20px;z-index:9999;background:var(--ink);color:#fff;padding:9px 15px;border-radius:9px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:300px}
+#toast.show{opacity:1}
+#toast.success{background:var(--primary)}
+#toast.error{background:#B83030}
+mark{background:var(--gold-light);border-radius:2px;padding:0 2px}
+
+/* Admin */
+#admin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:5000;align-items:center;justify-content:center}
+#admin-overlay.open{display:flex}
+#admin-box{background:#fff;border-radius:16px;width:340px;max-width:92vw;padding:28px 28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center}
+#admin-box .ab-icon{font-size:36px;margin-bottom:10px}
+#admin-box h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:var(--ink);margin-bottom:6px}
+#admin-box p{font-size:13px;color:var(--ink3);margin-bottom:18px;line-height:1.5}
+#admin-pw-wrap{position:relative;margin-bottom:12px}
+#admin-pw{width:100%;padding:11px 40px 11px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:var(--bg);transition:border-color .2s}
+#admin-pw:focus{outline:none;border-color:var(--primary)}
+#admin-pw.wrong{border-color:var(--red);animation:shake .35s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#admin-pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;color:var(--ink3)}
+#admin-err{font-size:12px;color:var(--red);margin-bottom:10px;display:none}
+.admin-login-btn{width:100%;padding:11px;border-radius:9px;border:none;background:var(--primary);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;margin-bottom:8px}
+.admin-login-btn:hover{background:var(--primary2)}
+.admin-cancel-btn{width:100%;padding:8px;border-radius:9px;border:1.5px solid var(--border);background:none;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;color:var(--ink3)}
+.admin-cancel-btn:hover{background:var(--bg)}
+#admin-bar{display:none;position:fixed;top:58px;left:0;right:0;height:32px;z-index:1090;background:var(--gold);color:var(--ink);font-size:12px;font-weight:600;align-items:center;justify-content:center;gap:10px}
+#admin-bar.show{display:flex}
+#admin-bar button{padding:3px 12px;border-radius:6px;border:1.5px solid rgba(0,0,0,.15);background:rgba(0,0,0,.08);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--ink)}
+#admin-bar button:hover{background:rgba(0,0,0,.16)}
+body.admin-mode #app{padding-top:calc(58px + 32px)}
+body.admin-mode #detail{top:calc(58px + 32px)}
+body.admin-mode #legend{bottom:20px}
+@media(max-width:700px){#sidebar{display:none}#dir-panel.open{width:100%}#legend,#legend.shifted{left:8px}#detail{width:100%}}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <h2>Surallah Agri-MSME Connect</h2>
+  <p id="load-msg">Loading directory…</p>
+</div>
+<div id="saving-bar"></div>
+
+<!-- GPS Nav Overlay -->
+<div id="nav-overlay">
+  <div id="nav-top">
+    <div id="nav-turn-banner">
+      <div id="nav-turn-left">
+        <div id="nav-turn-arrow">↑</div>
+        <div id="nav-turn-dist-label">—</div>
+      </div>
+      <div id="nav-turn-right">
+        <div id="nav-turn-instruction">Calculating…</div>
+        <div id="nav-turn-road-name"></div>
+      </div>
+    </div>
+    <div id="nav-next-strip"><span id="nav-next-arrow">↑</span><span id="nav-next-text">Loading next step…</span></div>
+    <div id="nav-street-strip"><span>🛣</span><span id="nav-street-label">Navigating…</span></div>
+  </div>
+  <button id="nav-recenter" onclick="navRecenter()" title="Re-centre">🎯</button>
+  <div id="nav-bottom">
+    <div id="nav-bottom-row">
+      <div id="nav-eta-block">
+        <div id="nav-eta-mins">—</div>
+        <div id="nav-eta-detail"><span id="nav-eta-km">—</span><span id="nav-eta-label">remaining</span></div>
+      </div>
+      <div id="nav-dest-chip">Destination</div>
+      <button id="nav-stop-btn" onclick="stopNavigation()" title="Stop">✕</button>
+    </div>
+  </div>
+</div>
+
+<div id="nav-arrived">
+  <div class="arr-top"><div class="arr-icon">🎉</div><h2>You have arrived!</h2><p id="nav-arrived-name">Welcome to your destination.</p></div>
+  <div class="arr-bottom"><button class="arr-done-btn" onclick="stopNavigation()">Done</button></div>
+</div>
+
+<!-- Header -->
+<div id="header">
+  <div class="logo">
+    <div class="logo-box">🌾</div>
+    <div class="logo-text">
+      <h1>Surallah Agri-MSME Connect</h1>
+      <span>Farmer &amp; MSME Interactive Directory — South Cotabato</span>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="hstat"><b id="h-farmers">—</b><small>Farmers</small></div>
+  <div class="hsep"></div>
+  <div class="hstat"><b id="h-msmes">—</b><small>MSMEs</small></div>
+  <div class="hsep"></div>
+  <div class="hstat"><b id="h-shown">—</b><small>Shown</small></div>
+  <div class="hsep"></div>
+  <button class="hbtn" onclick="loadFromDB()">↻ Refresh</button>
+  <button class="hbtn gold" id="btn-add-msme" onclick="openModal()" style="display:none">＋ Add Entry</button>
+  <button class="hbtn" id="btn-admin-lock" onclick="showAdminLogin()" title="Admin Login" style="font-size:15px">🔒</button>
+  <button class="hbtn" id="btn-admin-logout" onclick="adminLogout()" style="display:none;background:rgba(255,255,255,.25)">🔓 Logout</button>
+</div>
+
+<div id="admin-bar">🛡 Admin Mode — You can add, edit, and delete entries<button onclick="adminLogout()">Logout</button></div>
+
+<!-- Admin login -->
+<div id="admin-overlay">
+  <div id="admin-box">
+    <div class="ab-icon">🔐</div>
+    <h2>Admin Access</h2>
+    <p>Enter the admin password to unlock editing features.</p>
+    <div id="admin-pw-wrap">
+      <input type="password" id="admin-pw" placeholder="Enter password…" onkeydown="if(event.key==='Enter')doAdminLogin()">
+      <button id="admin-pw-eye" onclick="togglePwVis()" tabindex="-1">👁</button>
+    </div>
+    <div id="admin-err">Incorrect password. Try again.</div>
+    <button class="admin-login-btn" onclick="doAdminLogin()">Unlock</button>
+    <button class="admin-cancel-btn" onclick="closeAdminLogin()">Cancel</button>
+  </div>
+</div>
+
+<div id="app">
+  <div id="sidebar">
+    <div id="connect-banner">
+      <strong>🤝 Agri-MSME Connection Hub</strong>
+      Helping farmers supply raw materials to local MSMEs in Surallah, South Cotabato.
+    </div>
+    <div id="sidebar-top">
+      <div class="search-box"><span class="si">🔍</span><input type="text" id="search" placeholder="Search name, product, barangay…"></div>
+      <div class="filter-label">Filter by Type</div>
+      <div class="type-tabs">
+        <div class="type-tab on" data-type="All" onclick="setTypeFilter('All')">🗺 All</div>
+        <div class="type-tab" data-type="Farmer" onclick="setTypeFilter('Farmer')">🌾 Farmers</div>
+        <div class="type-tab" data-type="MSME" onclick="setTypeFilter('MSME')">🏪 MSMEs</div>
+      </div>
+      <div class="filter-label">Filter by Category</div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div id="msme-list"></div>
+    <div id="sidebar-foot">📍 Click a pin · 🧭 Get Directions · 🚗 Navigate</div>
+  </div>
+
+  <div id="dir-panel">
+    <div id="dir-inner">
+      <div class="dir-head">
+        <div class="dir-head-text"><h3>🧭 Directions</h3><div class="dir-dest" id="dir-dest-name">—</div></div>
+        <button class="dir-close-btn" onclick="closeDirections()">✕</button>
+      </div>
+      <div class="dir-from-to">
+        <div class="dir-point"><div class="dir-dot from"></div><div class="dir-point-wrap"><div class="dir-point-label">From</div><div class="dir-point-val" id="dir-from-label">Getting location…</div></div></div>
+        <div class="dir-line-connector"></div>
+        <div class="dir-point"><div class="dir-dot to"></div><div class="dir-point-wrap"><div class="dir-point-label">To</div><div class="dir-point-val" id="dir-to-label">—</div></div></div>
+      </div>
+      <div class="dir-mode-row">
+        <button class="mode-btn active" id="mode-car" onclick="setMode('car')"><span class="mode-icon">🚗</span>Drive</button>
+        <button class="mode-btn" id="mode-bike" onclick="setMode('bike')"><span class="mode-icon">🚲</span>Bike</button>
+        <button class="mode-btn" id="mode-walk" onclick="setMode('walk')"><span class="mode-icon">🚶</span>Walk</button>
+      </div>
+      <div id="dir-summary" class="dir-summary"><div class="dir-summary-row"><span class="dir-dist-big" id="dir-dist">—</span><span class="dir-time-big" id="dir-time">—</span></div></div>
+      <div id="dir-steps" class="dir-steps"><div class="dir-status"><div class="dir-spinner"></div><span>Waiting…</span></div></div>
+      <div class="dir-footer">
+        <button class="start-nav-btn" id="start-nav-btn" onclick="toggleNavigation()" style="display:none"><span id="start-nav-icon">🚗</span><span id="start-nav-text">Start Navigation</span></button>
+        <a id="gmaps-btn" class="gmaps-btn-link" href="#" target="_blank">🗺 Open in Google Maps</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+</div>
+
+<div id="legend"><div class="leg-title">Categories</div><div id="leg-items"></div></div>
+
+<!-- Detail Panel -->
+<div id="detail">
+  <div class="dh"><div id="dh-logo-wrap"></div><div style="flex:1;min-width:0"><div class="dh-title" id="dh-title"></div><div class="dh-sub" id="dh-sub"></div></div><button class="dh-close" onclick="closeDetail()">✕</button></div>
+  <div class="db" id="db"></div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div class="modal-head"><h2 id="modal-title">➕ Add New Entry</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+
+      <!-- Type selector -->
+      <div class="modal-section">
+        <div class="modal-section-title">Entry Type *</div>
+        <div class="type-selector">
+          <div class="type-radio-btn selected" data-t="Farmer" onclick="selectType('Farmer')">
+            <div class="type-radio-icon">🌾</div>
+            <div class="type-radio-label">Farmer</div>
+            <div class="type-radio-desc">Produces raw materials &amp; agricultural goods</div>
+          </div>
+          <div class="type-radio-btn" data-t="MSME" onclick="selectType('MSME')">
+            <div class="type-radio-icon">🏪</div>
+            <div class="type-radio-label">MSME</div>
+            <div class="type-radio-desc">Processes, manufactures, or sells products</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Basic Info -->
+      <div class="modal-section">
+        <div class="modal-section-title">Basic Information</div>
+        <div class="form-group"><label>Name / Business Name *</label><input type="text" id="f-name" placeholder="e.g. Juan dela Cruz Farm or Maria's Rice Cake Shop"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category *</label>
+            <select id="f-cat">
+              <option>Rice / Grains</option>
+              <option>Vegetables</option>
+              <option>Fruits</option>
+              <option>Livestock</option>
+              <option>Poultry</option>
+              <option>Fishery / Aquaculture</option>
+              <option>Coconut / Cacao / Coffee</option>
+              <option>Other Crops</option>
+              <option>Food Processing</option>
+              <option>Handicrafts</option>
+              <option>Garments / Textile</option>
+              <option>Retail / Trading</option>
+              <option>Services</option>
+              <option>Tourism / Agri-Tourism</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Barangay / Area</label>
+            <select id="f-muni">
+              <option>Barangay Centrala</option>
+              <option>Barangay Dajay</option>
+              <option>Barangay Ditaliw</option>
+              <option>Barangay Gapok</option>
+              <option>Barangay Lam-apos</option>
+              <option>Barangay Libertad</option>
+              <option>Barangay Lourdes</option>
+              <option>Barangay Lower Maculan</option>
+              <option>Barangay Moloy</option>
+              <option>Barangay Naci</option>
+              <option>Barangay Palumbi</option>
+              <option>Barangay Poblacion</option>
+              <option>Barangay Riegla</option>
+              <option>Barangay San Jose</option>
+              <option>Barangay Simsiman</option>
+              <option>Barangay Spring</option>
+              <option>Barangay Talahik</option>
+              <option>Barangay Tubiala</option>
+              <option>Barangay Upper Sepaka</option>
+              <option>Barangay Veterans</option>
+              <option>Surallah Poblacion</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea id="f-desc" placeholder="Brief description…"></textarea></div>
+        <div class="form-group"><label>📍 Location *</label><div class="loc-hint">Open <a href="https://maps.google.com" target="_blank">Google Maps</a> → right-click your location → copy the two numbers. First = Latitude, Second = Longitude.</div></div>
+        <div class="form-row">
+          <div class="form-group"><label>Latitude *</label><input type="number" id="f-lat" placeholder="e.g. 6.3583" step="any"></div>
+          <div class="form-group"><label>Longitude *</label><input type="number" id="f-lng" placeholder="e.g. 124.7363" step="any"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Contact Info</label><input type="text" id="f-contact" placeholder="e.g. 09171234567"></div>
+          <div class="form-group"><label>Logo / Photo URL</label><input type="text" id="f-logo" placeholder="https://i.imgur.com/…"><span class="form-hint">Use Imgur direct link</span></div>
+        </div>
+      </div>
+
+      <!-- Needs / Supplies (contextual) -->
+      <div class="modal-section" id="needs-section">
+        <div class="modal-section-title" id="needs-title">🔗 Raw Material Needs (MSME)</div>
+        <div class="form-group">
+          <label id="needs-label">What raw materials does this MSME need from farmers?</label>
+          <textarea id="f-needs" placeholder="e.g. Fresh tomatoes, rice, coconut milk, sugarcane…" style="min-height:56px"></textarea>
+          <span class="form-hint">Separate items with commas. This helps farmers know what MSMEs are looking for.</span>
+        </div>
+      </div>
+
+      <!-- Products / Produce -->
+      <div class="modal-section">
+        <div class="modal-section-title" id="prod-section-title">Products &amp; Produce <span style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0">(★ marks shown in popup — max 3 featured)</span></div>
+        <div class="prod-editor-list" id="prod-editor-list"></div>
+        <button class="add-prod-btn" onclick="addProductRow()">＋ Add Product / Produce</button>
+      </div>
+
+      <!-- Certifications (MSME only) -->
+      <div class="modal-section" id="cert-section">
+        <div class="modal-section-title">Business Certifications</div>
+        <div class="form-group"><label style="display:flex;align-items:center;gap:8px"><button class="cert-toggle" id="cert-dti-toggle" onclick="toggleCert('dti')"></button>🏛 DTI Certificate</label><input type="text" id="cert-dti-num" placeholder="DTI Business Name Reg. No." style="display:none;margin-top:6px"></div>
+        <div class="form-group"><label style="display:flex;align-items:center;gap:8px"><button class="cert-toggle" id="cert-mayors-toggle" onclick="toggleCert('mayors')"></button>🏢 Mayor's Permit</label><input type="text" id="cert-mayors-num" placeholder="Business Permit No." style="display:none;margin-top:6px"></div>
+        <div class="form-group"><label style="display:flex;align-items:center;gap:8px"><button class="cert-toggle" id="cert-bir-toggle" onclick="toggleCert('bir')"></button>📋 BIR Certificate of Registration</label><input type="text" id="cert-bir-num" placeholder="COR No." style="display:none;margin-top:6px"></div>
+        <div class="form-group"><label style="display:flex;align-items:center;gap:8px"><button class="cert-toggle" id="cert-fda-lto-toggle" onclick="toggleCert('fda-lto')"></button>🧪 FDA License to Operate</label><input type="text" id="cert-fda-lto-num" placeholder="FDA LTO No." style="display:none;margin-top:6px"></div>
+        <div class="form-group"><label style="display:flex;align-items:center;gap:8px"><button class="cert-toggle" id="cert-fda-cpr-toggle" onclick="toggleCert('fda-cpr')"></button>🧪 FDA Certificate of Product Registration</label><input type="text" id="cert-fda-cpr-num" placeholder="FDA CPR No." style="display:none;margin-top:6px"></div>
+      </div>
+
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" id="modal-save-btn" onclick="saveMSME()"><span id="save-btn-text">Add to Map</span></button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ═══════════════════════════════════════════
+// CONFIG — replace BIN_ID with a new JSONBin
+// ═══════════════════════════════════════════
+const BIN_ID  = '6a0fc5336610dd3ae88600f1'; // ← Create a new bin at jsonbin.io for Surallah
+const API_KEY = '$2a$10$a1e/AizzzXrdUaPhguiWJudsGiUD1d5rA0koAXOWFBrEybY.E6uki';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+const JBIN_HEADERS = {'Content-Type':'application/json','X-Master-Key':API_KEY,'X-Bin-Versioning':'false'};
+const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjI2ZmVmMzIxYTYzMjQ0M2Q5MzU3Y2NlODcxMDU1MzNhIiwiaCI6Im11cm11cjY0In0=';
+const ORS_PROFILES = {car:'driving-car',bike:'cycling-regular',walk:'foot-walking'};
+const ARRIVE_RADIUS = 50;
+
+const SEED_DATA = [
+  {id:'s1',type:'Farmer',name:'Dela Cruz Rice Farm',category:'Rice / Grains',municipality:'Barangay Centrala',
+   products:[{name:'White Rice',photoUrl:'',featured:true},{name:'Brown Rice',photoUrl:'',featured:true}],
+   description:'Family-owned rice farm producing quality white and brown rice in Centrala.',
+   needs:'',lat:6.3605,lng:124.7390,contact:'09171234567',logoUrl:'',
+   certs:{dti:{has:false,num:''},mayors:{has:false,num:''},bir:{has:false,num:''},fdaLto:{has:false,num:''},fdaCpr:{has:false,num:''}}},
+  {id:'s2',type:'Farmer',name:'Santos Vegetable Garden',category:'Vegetables',municipality:'Barangay Spring',
+   products:[{name:'Ampalaya',photoUrl:'',featured:true},{name:'Sitaw',photoUrl:'',featured:true},{name:'Kamatis',photoUrl:'',featured:true}],
+   description:'Fresh vegetables grown organically in the cool highlands of Spring.',
+   needs:'',lat:6.3680,lng:124.7450,contact:'09281234567',logoUrl:'',
+   certs:{dti:{has:false,num:''},mayors:{has:false,num:''},bir:{has:false,num:''},fdaLto:{has:false,num:''},fdaCpr:{has:false,num:''}}},
+  {id:'s3',type:'MSME',name:'Surallah Rice Cake Haus',category:'Food Processing',municipality:'Surallah Poblacion',
+   products:[{name:'Bibingka',photoUrl:'',featured:true},{name:'Puto',photoUrl:'',featured:true},{name:'Kakanin',photoUrl:'',featured:true}],
+   description:'Home-based food business making traditional Filipino rice cakes using locally sourced rice.',
+   needs:'Rice, coconut milk, sugar',lat:6.3560,lng:124.7350,contact:'09171112222',logoUrl:'',
+   certs:{dti:{has:true,num:'DTI-2024-001'},mayors:{has:true,num:'MP-2024-001'},bir:{has:false,num:''},fdaLto:{has:false,num:''},fdaCpr:{has:false,num:''}}},
+  {id:'s4',type:'MSME',name:'Lola Nena\'s Vinegar & Condiments',category:'Food Processing',municipality:'Barangay Libertad',
+   products:[{name:'Coconut Vinegar',photoUrl:'',featured:true},{name:'Chili Paste',photoUrl:'',featured:true}],
+   description:'Small enterprise producing natural coconut vinegar and condiments from local produce.',
+   needs:'Coconut, chili peppers, garlic',lat:6.3540,lng:124.7310,contact:'09282223333',logoUrl:'',
+   certs:{dti:{has:true,num:'DTI-2024-002'},mayors:{has:false,num:''},bir:{has:false,num:''},fdaLto:{has:false,num:''},fdaCpr:{has:false,num:''}}},
+  {id:'s5',type:'Farmer',name:'Tugado Cacao Farm',category:'Coconut / Cacao / Coffee',municipality:'Barangay Talahik',
+   products:[{name:'Cacao Pods',photoUrl:'',featured:true},{name:'Dried Cacao Beans',photoUrl:'',featured:true}],
+   description:'Produces premium cacao beans for local chocolatiers and food processors.',
+   needs:'',lat:6.3720,lng:124.7280,contact:'09171114444',logoUrl:'',
+   certs:{dti:{has:false,num:''},mayors:{has:false,num:''},bir:{has:false,num:''},fdaLto:{has:false,num:''},fdaCpr:{has:false,num:''}}},
+];
+
+const CAT_STYLES={
+  'rice / grains':{color:'#7A5800',bg:'#FFF8E8',icon:'🌾'},
+  'vegetables':{color:'#2D7A1F',bg:'#EBF5E8',icon:'🥬'},
+  'fruits':{color:'#B85A00',bg:'#FFF0E3',icon:'🍎'},
+  'livestock':{color:'#7A3A00',bg:'#FFF0E3',icon:'🐄'},
+  'poultry':{color:'#9C6B0A',bg:'#FDF3E3',icon:'🐓'},
+  'fishery / aquaculture':{color:'#0A6B7A',bg:'#E3F5F8',icon:'🐟'},
+  'coconut / cacao / coffee':{color:'#5C3A00',bg:'#F5EBE0',icon:'🌰'},
+  'other crops':{color:'#3A7A2D',bg:'#EBF5E8',icon:'🌿'},
+  'food processing':{color:'#1044A3',bg:'#E8EFFE',icon:'🍽️'},
+  'handicrafts':{color:'#6B3A8B',bg:'#F3E8FF',icon:'🎁'},
+  'garments / textile':{color:'#8B1A6B',bg:'#F8E8F3',icon:'👗'},
+  'retail / trading':{color:'#0A5C8B',bg:'#E3F0F8',icon:'🛒'},
+  'services':{color:'#3A5C8B',bg:'#E8EFF8',icon:'⚙️'},
+  'tourism / agri-tourism':{color:'#0A7A7A',bg:'#E3F5F5',icon:'🌿'},
+};
+const FB=['#1044A3','#2D7A1F','#9C6B0A','#6B3A8B','#0A6B7A','#7A5800','#5C3A00','#1A7A3C','#8B1A6B'];
+let dynCats={},dynIdx=0;
+function catStyle(cat){const k=(cat||'other').toLowerCase().trim();if(CAT_STYLES[k])return CAT_STYLES[k];if(!dynCats[k]){dynCats[k]={color:FB[dynIdx%FB.length],bg:'#F5F5F5',icon:'🏪'};dynIdx++;}return dynCats[k];}
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let allData=[],markers={},activeFilter='All',activeTypeFilter='All',activeId=null,map;
+let modalMode='add',editingId=null,isSaving=false;
+let pendingProducts=[];
+let userLat=null,userLng=null,userMarker=null,routeLayer=null;
+let dirMode='car',dirMSME=null,routeSteps=[],routeCoords=[];
+let isNavigating=false,watchId=null,currentStepIdx=0,spokenSteps=new Set(),arrivedShown=false;
+let pendingType='Farmer';
+
+function migrateEntry(m){
+  if(!m.products) m.products=[];
+  if(m.products.length&&typeof m.products[0]==='string'){m.products=m.products.map((p,i)=>({name:p,photoUrl:'',featured:i<3}));}
+  if(!m.certs) m.certs={dti:{has:false,num:''},mayors:{has:false,num:''},bir:{has:false,num:''},fdaLto:{has:false,num:''},fdaCpr:{has:false,num:''}};
+  if(!m.type) m.type='MSME';
+  if(!m.needs) m.needs='';
+  return m;
+}
+
+// ═══════════════════════════════════════════
+// MAP
+// ═══════════════════════════════════════════
+function initMap(){
+  map=L.map('map',{center:[6.3583,124.7363],zoom:13,zoomControl:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:19}).addTo(map);
+  L.control.zoom({position:'topright'}).addTo(map);
+  L.control.scale({position:'bottomright',imperial:false}).addTo(map);
+  map.on('click',()=>{map.closePopup();setActive(null);});
+}
+
+// ═══════════════════════════════════════════
+// DATABASE
+// ═══════════════════════════════════════════
+async function loadFromDB(){
+  setLoadMsg('Loading…');showLoading(true);
+  try{
+    const res=await fetch(BIN_URL+'/latest',{headers:{'X-Master-Key':API_KEY}});
+    if(!res.ok)throw new Error();
+    const json=await res.json();
+    let msmes=json.record?.msmes;
+    if(!msmes||!msmes.length){await saveToDB(SEED_DATA);msmes=SEED_DATA;}
+    allData=msmes.filter(m=>m.name&&!isNaN(m.lat)&&!isNaN(m.lng)).map(migrateEntry);
+    render();showLoading(false);toast('✅ '+allData.length+' entries loaded','success');
+  }catch{showLoading(false);allData=SEED_DATA.map(migrateEntry);render();toast('⚠️ Using sample data','error');}
+}
+async function saveToDB(data){
+  showSavingBar(true);
+  try{const res=await fetch(BIN_URL,{method:'PUT',headers:JBIN_HEADERS,body:JSON.stringify({msmes:data})});if(!res.ok)throw new Error();showSavingBar(false);return true;}
+  catch{showSavingBar(false);toast('❌ Save failed','error');return false;}
+}
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+function render(){
+  Object.values(markers).forEach(m=>map.removeLayer(m));
+  markers={};activeFilter='All';activeId=null;
+  buildChips();buildLegend();applyFilters();updateStats();
+  if(allData.length)map.fitBounds(allData.map(m=>[m.lat,m.lng]),{padding:[40,40],maxZoom:15});
+}
+function updateStats(){
+  const farmers=allData.filter(m=>m.type==='Farmer').length;
+  const msmes=allData.filter(m=>m.type==='MSME').length;
+  document.getElementById('h-farmers').textContent=farmers;
+  document.getElementById('h-msmes').textContent=msmes;
+  document.getElementById('h-shown').textContent=filtered().length;
+}
+
+// ═══════════════════════════════════════════
+// MARKERS
+// ═══════════════════════════════════════════
+function makeIcon(m,sel=false){
+  const cs=catStyle(m.category),sz=sel?46:36;
+  const isFarmer=m.type==='Farmer';
+  const borderColor=isFarmer?'#1A7A3C':'#1044A3';
+  const sh=sel?`0 0 0 3px ${isFarmer?'rgba(26,122,60,.4)':'rgba(16,68,163,.4)'},0 3px 14px rgba(0,0,0,.38)`:'0 2px 10px rgba(0,0,0,.28)';
+  const inner=m.logoUrl
+    ?`<img src="${esc(m.logoUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><span style="display:none;font-size:${sel?18:14}px">${cs.icon}</span>`
+    :`<span style="font-size:${sel?18:14}px">${cs.icon}</span>`;
+  const typeStripe=`<div style="position:absolute;bottom:0;right:0;width:14px;height:14px;border-radius:50%;background:${isFarmer?'#1A7A3C':'#1044A3'};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:8px">${isFarmer?'🌾':'🏪'}</div>`;
+  return L.divIcon({html:`<div style="position:relative;width:${sz}px;height:${sz}px;border-radius:50%;background:${cs.bg};border:2.5px solid ${borderColor};box-shadow:${sh};display:flex;align-items:center;justify-content:center;overflow:visible;cursor:pointer">${inner}${typeStripe}</div>`,className:'',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],popupAnchor:[0,-(sz/2+4)]});
+}
+
+function buildPopupHTML(m){
+  const cs=catStyle(m.category);
+  const featured=(m.products||[]).filter(p=>p.featured).slice(0,3);
+  const showProds=featured.length?featured:(m.products||[]).slice(0,3);
+  let prodGrid='';
+  if(showProds.length){
+    prodGrid=`<div class="pu-prod-grid">`;
+    showProds.forEach(p=>{
+      const img=p.photoUrl?`<img class="pu-prod-img" src="${esc(p.photoUrl)}" onerror="this.outerHTML='<div class=\\'pu-prod-img-fb\\'>${cs.icon}</div>'">`:
+        `<div class="pu-prod-img-fb">${cs.icon}</div>`;
+      prodGrid+=`<div class="pu-prod-item">${img}<div class="pu-prod-name">${esc(p.name)}</div></div>`;
+    });
+    prodGrid+=`</div>`;
+  }else{prodGrid=`<div style="font-size:11px;color:var(--ink3);margin-bottom:8px">No items listed yet.</div>`;}
+  const logo=m.logoUrl?`<img class="pu-logo" src="${esc(m.logoUrl)}" onerror="this.outerHTML='<div class=\\'pu-logo-fb\\' style=\\'background:${cs.bg}\\'>${cs.icon}</div>'">`:
+    `<div class="pu-logo-fb" style="background:${cs.bg}">${cs.icon}</div>`;
+  const isFarmer=m.type==='Farmer';
+  const typeBadge=`<span class="pu-type-badge ${isFarmer?'farmer':'msme'}">${isFarmer?'🌾 Farmer':'🏪 MSME'}</span>`;
+  const needsSnip=m.needs?`<div style="font-size:10px;color:#1044A3;margin-top:4px">🔗 Needs: ${esc(m.needs)}</div>`:'';
+  return `<div class="pu-head">${logo}<div><div class="pu-name">${esc(m.name)}</div><span class="pu-badge" style="background:${cs.bg};color:${cs.color}">${cs.icon} ${esc(m.category)}</span>${typeBadge}${needsSnip}</div></div>
+  <div class="pu-body"><div class="pu-lbl">${isFarmer?'Produce':'Featured Products'}</div>${prodGrid}<div class="pu-meta"><span>📍 ${esc(m.municipality||'—')}</span>${m.contact?`<span>📞 ${esc(m.contact)}</span>`:''}</div></div>
+  <div class="pu-foot"><button class="pu-btn" onclick="openDetail('${esc(m.id)}')">View Profile</button><button class="pu-dir-btn" onclick="startDirections('${esc(m.id)}')">🧭 Directions</button>${isAdmin?`<button class="pu-edit-btn" onclick="openEditModal('${esc(m.id)}')">✏️</button>`:''}</div>`;
+}
+
+function placeMarker(m){
+  if(markers[m.id])return;
+  const mk=L.marker([m.lat,m.lng],{icon:makeIcon(m)});
+  mk.bindTooltip(`<strong>${esc(m.name)}</strong> · ${m.type==='Farmer'?'🌾 Farmer':'🏪 MSME'}<br>📍 ${esc(m.municipality||'')}`,{direction:'top',offset:[0,-20]});
+  mk.bindPopup(buildPopupHTML(m),{maxWidth:280,minWidth:270,closeButton:false});
+  mk.on('click',()=>setActive(m.id));
+  mk.addTo(map);markers[m.id]=mk;
+}
+function refreshMarker(m){if(markers[m.id]){map.removeLayer(markers[m.id]);delete markers[m.id];}placeMarker(m);markers[m.id].setIcon(makeIcon(m,m.id===activeId));}
+function refreshIcons(){allData.forEach(m=>{if(markers[m.id])markers[m.id].setIcon(makeIcon(m,m.id===activeId));});}
+
+// ═══════════════════════════════════════════
+// DETAIL PANEL
+// ═══════════════════════════════════════════
+function openDetail(id){
+  const m=allData.find(x=>x.id===id);if(!m)return;map.closePopup();
+  const cs=catStyle(m.category);
+  document.getElementById('dh-logo-wrap').innerHTML=m.logoUrl?`<img class="dh-logo" src="${esc(m.logoUrl)}" onerror="this.outerHTML='<div class=\\'dh-logo-fb\\'>${cs.icon}</div>'">`:
+    `<div class="dh-logo-fb">${cs.icon}</div>`;
+  document.getElementById('dh-title').textContent=m.name;
+  const isFarmer=m.type==='Farmer';
+  document.getElementById('dh-sub').textContent=`${m.municipality||''} · ${isFarmer?'🌾 Farmer':'🏪 MSME'} · ${m.category}`;
+  const prods=m.products||[];
+  let galleryHTML=prods.length?`<div class="prod-gallery">${prods.map(p=>{const img=p.photoUrl?`<img class="prod-gallery-img" src="${esc(p.photoUrl)}" onerror="this.outerHTML='<div class=\\'prod-gallery-img-fb\\'>${cs.icon}</div>'">`:
+    `<div class="prod-gallery-img-fb">${cs.icon}</div>`;return`<div class="prod-gallery-item">${img}<div class="prod-gallery-name">${esc(p.name)}</div></div>`;}).join('')}</div>`:`<p>No items listed yet.</p>`;
+  const certs=m.certs||{};
+  const certDefs=[{key:'dti',icon:'🏛',label:'DTI Certificate',subLabel:'Reg. No.'},{key:'mayors',icon:'🏢',label:"Mayor's Permit",subLabel:'Permit No.'},{key:'bir',icon:'📋',label:'BIR COR',subLabel:'COR No.'},{key:'fdaLto',icon:'🧪',label:'FDA LTO',subLabel:'LTO No.'},{key:'fdaCpr',icon:'🧪',label:'FDA CPR',subLabel:'CPR No.'}];
+  const hasCerts=certDefs.some(cd=>certs[cd.key]?.has);
+  let certHTML=hasCerts?`<div class="cert-list">${certDefs.filter(cd=>certs[cd.key]?.has).map(cd=>`<div class="cert-item"><div class="cert-badge" style="background:var(--primary-pale)">${cd.icon}</div><div class="cert-body"><div class="cert-name">${cd.label}</div><span class="cert-status registered">✔ Registered</span>${certs[cd.key].num?`<div class="cert-num">${cd.subLabel}: <strong>${esc(certs[cd.key].num)}</strong></div>`:''}</div></div>`).join('')}</div>`:
+    `<div class="cert-none">No certifications on file.</div>`;
+  let needsHTML='';
+  if(isFarmer){
+    needsHTML=`<div class="needs-section"><h4>🌾 Supplies / Produce Available</h4><div>${prods.map(p=>`<span class="supplies-tag">✓ ${esc(p.name)}</span>`).join('')||'—'}</div></div>`;
+  }else if(m.needs){
+    needsHTML=`<div class="needs-section"><h4>🔗 Raw Material Needs from Farmers</h4><div>${m.needs.split(',').map(n=>n.trim()).filter(Boolean).map(n=>`<span class="needs-tag">🔍 ${esc(n)}</span>`).join('')}</div></div>`;
+  }
+  document.getElementById('db').innerHTML=`
+    ${m.description?`<div class="ds"><h3>About</h3><p>${esc(m.description)}</p></div>`:''}
+    ${needsHTML}
+    <div class="ds"><h3>${isFarmer?'Produce':'Products &amp; Services'} (${prods.length})</h3>${galleryHTML}</div>
+    <div class="ds"><h3>Information</h3>
+      <div class="irow"><span class="ikey">Type</span><span class="ival">${isFarmer?'🌾 Farmer':'🏪 MSME'}</span></div>
+      <div class="irow"><span class="ikey">Category</span><span class="ival">${esc(m.category)}</span></div>
+      ${m.municipality?`<div class="irow"><span class="ikey">Barangay</span><span class="ival">${esc(m.municipality)}</span></div>`:''}
+      ${m.contact?`<div class="irow"><span class="ikey">Contact</span><span class="ival">${esc(m.contact)}</span></div>`:''}
+      <div class="irow"><span class="ikey">Coordinates</span><span class="ival">${m.lat.toFixed(5)}, ${m.lng.toFixed(5)}</span></div>
+    </div>
+    ${!isFarmer?`<div class="ds"><h3>Certifications</h3>${certHTML}</div>`:''}
+    <div class="action-row">
+      <button class="d-dir-btn" onclick="startDirections('${esc(m.id)}')">🧭 Get Directions</button>
+      ${isAdmin?`<button class="d-edit-btn" onclick="openEditModal('${esc(m.id)}')">✏️ Edit</button>`:''}
+    </div>
+    ${m.contact?`<button class="d-copy-btn" onclick="copyTxt('${m.contact.replace(/'/g,"\\'")}','${m.name.replace(/'/g,"\\'")}')">📋 Copy Contact</button>`:''}
+    ${isAdmin?`<button class="d-del-btn" onclick="deleteMSME('${esc(m.id)}')">🗑 Remove from Map</button>`:''}`;
+  document.getElementById('detail').classList.add('open');
+}
+function closeDetail(){document.getElementById('detail').classList.remove('open');}
+window.openDetail=openDetail;window.closeDetail=closeDetail;
+
+// ═══════════════════════════════════════════
+// FILTERS & LIST
+// ═══════════════════════════════════════════
+function setTypeFilter(type){
+  activeTypeFilter=type;
+  document.querySelectorAll('.type-tab').forEach(t=>t.classList.toggle('on',t.dataset.type===type));
+  applyFilters();
+}
+window.setTypeFilter=setTypeFilter;
+
+function filtered(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  return allData.filter(m=>{
+    const mc=activeFilter==='All'||m.category===activeFilter;
+    const mt=activeTypeFilter==='All'||m.type===activeTypeFilter;
+    const mq=!q||[m.name,m.category,m.municipality,m.description,m.needs,...(m.products||[]).map(p=>p.name)].some(s=>(s||'').toLowerCase().includes(q));
+    return mc&&mt&&mq;
+  });
+}
+function applyFilters(){const fd=filtered();allData.forEach(m=>{const show=fd.find(f=>f.id===m.id);if(show){placeMarker(m);map.addLayer(markers[m.id]);}else if(markers[m.id])map.removeLayer(markers[m.id]);});buildList(fd);document.getElementById('h-shown').textContent=fd.length;}
+function buildChips(){const cats=['All',...new Set(allData.map(m=>m.category).filter(Boolean))];const el=document.getElementById('chips');el.innerHTML='';cats.forEach(cat=>{const cs=cat==='All'?null:catStyle(cat);const ch=document.createElement('div');ch.className='chip'+(cat===activeFilter?' on':'');ch.textContent=cat==='All'?'🗺 All':`${cs.icon} ${cat}`;ch.addEventListener('click',()=>{activeFilter=cat;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));ch.classList.add('on');applyFilters();});el.appendChild(ch);});}
+function buildList(data){const el=document.getElementById('msme-list');const q=document.getElementById('search').value.trim().toLowerCase();el.innerHTML='';if(!data.length){el.innerHTML='<div class="no-results">😔 No entries found</div>';return;}const hi=s=>q?esc(s).replace(new RegExp(`(${escRe(q)})`,'gi'),'<mark>$1</mark>'):esc(s);data.forEach(m=>{const cs=catStyle(m.category);const isFarmer=m.type==='Farmer';const card=document.createElement('div');card.className='mcard'+(m.id===activeId?' active':'');card.dataset.id=m.id;const logo=m.logoUrl?`<img class="mcard-logo" src="${esc(m.logoUrl)}" onerror="this.outerHTML='<div class=\\'mcard-logo-fb\\' style=\\'background:${cs.bg}\\'>${cs.icon}</div>'">`:`<div class="mcard-logo-fb" style="background:${cs.bg}">${cs.icon}</div>`;const prods=(m.products||[]).slice(0,3).map(p=>hi(p.name)).join(' · ');card.innerHTML=`${logo}<div class="mcard-info"><div class="mcard-name">${hi(m.name)}</div><span class="mcard-type-badge ${isFarmer?'farmer':'msme'}">${isFarmer?'🌾 Farmer':'🏪 MSME'}</span><div class="mcard-cat">${cs.icon} ${esc(m.category)}</div><div class="mcard-prods">${prods||'—'}</div></div>`;card.addEventListener('click',()=>selectMSME(m.id));el.appendChild(card);});}
+function buildLegend(){const el=document.getElementById('leg-items');el.innerHTML=`<div class="leg-item"><div class="ldot" style="background:#1A7A3C"></div><span>🌾 Farmers</span></div><div class="leg-item"><div class="ldot" style="background:#1044A3"></div><span>🏪 MSMEs</span></div>`;const cats=[...new Set(allData.map(m=>m.category).filter(Boolean))];cats.forEach(cat=>{const cs=catStyle(cat);const item=document.createElement('div');item.className='leg-item';item.innerHTML=`<div class="ldot" style="background:${cs.color}"></div><span>${cs.icon} ${esc(cat)}</span>`;item.addEventListener('click',()=>{activeFilter=cat;document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.textContent.includes(cat)));applyFilters();});el.appendChild(item);});}
+
+// ═══════════════════════════════════════════
+// SELECT
+// ═══════════════════════════════════════════
+function setActive(id){activeId=id;refreshIcons();document.querySelectorAll('.mcard').forEach(c=>c.classList.toggle('active',c.dataset.id===id));if(id){const c=document.querySelector(`.mcard[data-id="${id}"]`);if(c)c.scrollIntoView({behavior:'smooth',block:'center'});}}
+function selectMSME(id){const m=allData.find(x=>x.id===id);if(!m)return;setActive(id);map.flyTo([m.lat,m.lng],Math.max(map.getZoom(),15),{duration:1.2});setTimeout(()=>{if(markers[id])markers[id].openPopup();},900);}
+
+// ═══════════════════════════════════════════
+// DELETE
+// ═══════════════════════════════════════════
+async function deleteMSME(id){const m=allData.find(x=>x.id===id);if(!m)return;if(!confirm(`Remove "${m.name}"?`))return;allData=allData.filter(x=>x.id!==id);if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}closeDetail();buildChips();buildLegend();applyFilters();updateStats();const ok=await saveToDB(allData);if(ok)toast(`🗑 "${m.name}" removed`,'success');}
+window.deleteMSME=deleteMSME;
+
+// ═══════════════════════════════════════════
+// TYPE SELECTOR (modal)
+// ═══════════════════════════════════════════
+function selectType(t){
+  pendingType=t;
+  document.querySelectorAll('.type-radio-btn').forEach(b=>b.classList.toggle('selected',b.dataset.t===t));
+  const isFarmer=t==='Farmer';
+  document.getElementById('needs-title').textContent=isFarmer?'🌾 Farmer Info':'🔗 Raw Material Needs (MSME)';
+  document.getElementById('needs-label').textContent=isFarmer?'What crops / produce does this farmer supply?':'What raw materials does this MSME need from farmers?';
+  document.getElementById('f-needs').placeholder=isFarmer?'e.g. Rice, vegetables, fruits (helps MSMEs find you)':'e.g. Fresh tomatoes, rice, coconut milk…';
+  document.getElementById('cert-section').style.display=isFarmer?'none':'flex';
+  document.getElementById('prod-section-title').textContent=isFarmer?'Produce / Agricultural Products ★':'Products & Services ★';
+}
+window.selectType=selectType;
+
+// ═══════════════════════════════════════════
+// PRODUCT EDITOR
+// ═══════════════════════════════════════════
+function renderProdEditor(){const el=document.getElementById('prod-editor-list');el.innerHTML='';pendingProducts.forEach((p,i)=>{const div=document.createElement('div');div.className='prod-editor-item';const img=p.photoUrl?`<img class="prod-editor-img" src="${esc(p.photoUrl)}" onerror="this.className='prod-editor-img-fb';this.innerHTML='🛍'">`:`<div class="prod-editor-img-fb">🛍</div>`;const featCount=pendingProducts.filter(x=>x.featured).length;const canFeature=p.featured||(featCount<3);div.innerHTML=`${img}<div class="prod-editor-fields"><input type="text" placeholder="${pendingType==='Farmer'?'Crop / produce name':'Product name'}" value="${esc(p.name)}" oninput="updateProd(${i},'name',this.value)"><input type="text" class="url-input" placeholder="Photo URL (i.imgur.com/…)" value="${esc(p.photoUrl)}" oninput="updateProd(${i},'photoUrl',this.value)"></div><button class="featured-toggle ${p.featured?'on':''}" title="Show in popup (max 3)" onclick="toggleFeatured(${i})" ${!canFeature&&!p.featured?'disabled style="opacity:.4"':''}>★</button><button class="prod-remove-btn" onclick="removeProd(${i})">✕</button>`;el.appendChild(div);});}
+function addProductRow(){pendingProducts.push({name:'',photoUrl:'',featured:pendingProducts.filter(p=>p.featured).length<3});renderProdEditor();}
+function updateProd(i,field,val){pendingProducts[i][field]=val;if(field==='photoUrl')setTimeout(()=>renderProdEditor(),500);}
+function toggleFeatured(i){const p=pendingProducts[i];if(p.featured){p.featured=false;}else{const cnt=pendingProducts.filter(x=>x.featured).length;if(cnt>=3){alert('Max 3 featured. Unstar another first.');return;}p.featured=true;}renderProdEditor();}
+function removeProd(i){pendingProducts.splice(i,1);renderProdEditor();}
+window.addProductRow=addProductRow;window.updateProd=updateProd;window.toggleFeatured=toggleFeatured;window.removeProd=removeProd;
+
+// ═══════════════════════════════════════════
+// CERT TOGGLES
+// ═══════════════════════════════════════════
+function toggleCert(key){const btn=document.getElementById('cert-'+key+'-toggle');const inp=document.getElementById('cert-'+key+'-num');const isOn=btn.classList.toggle('on');inp.style.display=isOn?'block':'none';if(!isOn)inp.value='';}
+window.toggleCert=toggleCert;
+function setCertState(key,has,num){const btn=document.getElementById('cert-'+key+'-toggle');const inp=document.getElementById('cert-'+key+'-num');if(has){btn.classList.add('on');inp.style.display='block';inp.value=num||'';}else{btn.classList.remove('on');inp.style.display='none';inp.value='';}}
+function readCerts(){const keys=['dti','mayors','bir','fda-lto','fda-cpr'];const out={};keys.forEach(k=>{const camel=k.replace(/-([a-z])/g,(_,c)=>c.toUpperCase());const btn=document.getElementById('cert-'+k+'-toggle');const inp=document.getElementById('cert-'+k+'-num');out[camel]={has:btn.classList.contains('on'),num:inp.value.trim()};});return out;}
+
+// ═══════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════
+function openModal(){
+  modalMode='add';editingId=null;pendingProducts=[];pendingType='Farmer';
+  document.getElementById('modal-title').textContent='➕ Add New Entry';
+  document.getElementById('save-btn-text').textContent='Add to Map';
+  ['f-name','f-desc','f-lat','f-lng','f-contact','f-logo','f-needs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-cat').value='Rice / Grains';
+  document.getElementById('f-muni').value='Surallah Poblacion';
+  ['dti','mayors','bir','fda-lto','fda-cpr'].forEach(k=>setCertState(k,false,''));
+  selectType('Farmer');
+  renderProdEditor();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function openEditModal(id){
+  const m=allData.find(x=>x.id===id);if(!m)return;
+  modalMode='edit';editingId=id;pendingProducts=(m.products||[]).map(p=>({...p}));pendingType=m.type||'MSME';
+  document.getElementById('modal-title').textContent='✏️ Edit Entry';
+  document.getElementById('save-btn-text').textContent='Save Changes';
+  document.getElementById('f-name').value=m.name||'';
+  document.getElementById('f-cat').value=m.category||'Rice / Grains';
+  document.getElementById('f-muni').value=m.municipality||'Surallah Poblacion';
+  document.getElementById('f-desc').value=m.description||'';
+  document.getElementById('f-lat').value=m.lat||'';
+  document.getElementById('f-lng').value=m.lng||'';
+  document.getElementById('f-contact').value=m.contact||'';
+  document.getElementById('f-logo').value=m.logoUrl||'';
+  document.getElementById('f-needs').value=m.needs||'';
+  const c=m.certs||{};
+  setCertState('dti',c.dti?.has,c.dti?.num);setCertState('mayors',c.mayors?.has,c.mayors?.num);
+  setCertState('bir',c.bir?.has,c.bir?.num);setCertState('fda-lto',c.fdaLto?.has,c.fdaLto?.num);setCertState('fda-cpr',c.fdaCpr?.has,c.fdaCpr?.num);
+  selectType(pendingType);
+  renderProdEditor();map.closePopup();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+window.openEditModal=openEditModal;
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+window.openModal=openModal;window.closeModal=closeModal;
+
+async function saveMSME(){
+  if(isSaving)return;
+  const name=document.getElementById('f-name').value.trim();
+  const cat=document.getElementById('f-cat').value;
+  const muni=document.getElementById('f-muni').value;
+  const desc=document.getElementById('f-desc').value.trim();
+  const lat=parseFloat(document.getElementById('f-lat').value);
+  const lng=parseFloat(document.getElementById('f-lng').value);
+  const contact=document.getElementById('f-contact').value.trim();
+  const logoUrl=document.getElementById('f-logo').value.trim();
+  const needs=document.getElementById('f-needs').value.trim();
+  const certs=readCerts();
+  const products=pendingProducts.filter(p=>p.name.trim());
+  if(!name){alert('Please enter a name.');return;}
+  if(isNaN(lat)||isNaN(lng)){alert('Please enter valid Latitude and Longitude.');return;}
+  isSaving=true;const btn=document.getElementById('modal-save-btn');btn.disabled=true;
+  document.getElementById('save-btn-text').textContent='Saving…';
+  if(modalMode==='edit'){
+    const idx=allData.findIndex(x=>x.id===editingId);if(idx<0){isSaving=false;return;}
+    allData[idx]={...allData[idx],type:pendingType,name,category:cat,municipality:muni,products,description:desc,lat,lng,contact,logoUrl,needs,certs};
+    const ok=await saveToDB(allData);
+    if(ok){refreshMarker(allData[idx]);buildChips();buildLegend();applyFilters();updateStats();closeModal();if(document.getElementById('detail').classList.contains('open'))openDetail(editingId);toast(`✅ "${name}" updated!`,'success');}
+  }else{
+    const newId=String(Date.now());
+    const entry={id:newId,type:pendingType,name,category:cat,municipality:muni,products,description:desc,lat,lng,contact,logoUrl,needs,certs};
+    allData.push(entry);
+    const ok=await saveToDB(allData);
+    if(ok){buildChips();buildLegend();applyFilters();updateStats();placeMarker(entry);map.flyTo([lat,lng],15,{duration:1});setTimeout(()=>{if(markers[newId])markers[newId].openPopup();},800);closeModal();toast(`✅ "${name}" added!`,'success');}
+    else allData.pop();
+  }
+  isSaving=false;btn.disabled=false;
+  document.getElementById('save-btn-text').textContent=modalMode==='edit'?'Save Changes':'Add to Map';
+}
+window.saveMSME=saveMSME;
+
+// ═══════════════════════════════════════════
+// DIRECTIONS & GPS NAV
+// ═══════════════════════════════════════════
+function fmtDist(m){return m>=1000?(m/1000).toFixed(1)+' km':Math.round(m)+' m';}
+function fmtTime(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h>0?h+'h '+m+'min':m<1?'<1 min':m+' min';}
+const ARROW_MAP={'turn left':'↰','turn right':'↱','slight left':'↖','slight right':'↗','sharp left':'⬅','sharp right':'➡','keep left':'↖','keep right':'↗','continue':'↑','head':'↑','roundabout':'🔄','arrive':'🎯','depart':'🟢','ferry':'⛴','uturn':'↩'};
+function getArrow(txt){const t=(txt||'').toLowerCase();for(const[k,v]of Object.entries(ARROW_MAP))if(t.includes(k))return v;return'↑';}
+function setDirStatus(html){document.getElementById('dir-steps').innerHTML=`<div class="dir-status">${html}</div>`;document.getElementById('dir-summary').style.display='none';}
+function updateGmapsLink(fLat,fLng,tLat,tLng){const mode={car:'driving',bike:'bicycling',walk:'walking'}[dirMode];const origin=fLat?`&origin=${fLat},${fLng}`:'';document.getElementById('gmaps-btn').href=`https://www.google.com/maps/dir/?api=1${origin}&destination=${tLat},${tLng}&travelmode=${mode}`;}
+
+async function startDirections(id){
+  const m=allData.find(x=>x.id===id);if(!m)return;map.closePopup();dirMSME=m;
+  document.getElementById('dir-panel').classList.add('open');document.getElementById('legend').classList.add('shifted');
+  document.getElementById('dir-dest-name').textContent=m.name;document.getElementById('dir-to-label').textContent=m.name+', '+m.municipality;
+  document.getElementById('dir-from-label').textContent='Getting location…';document.getElementById('dir-summary').style.display='none';
+  document.getElementById('start-nav-btn').style.display='none';updateGmapsLink(null,null,m.lat,m.lng);
+  setDirStatus('<div class="dir-spinner"></div><span>Getting your location…</span>');
+  if(!navigator.geolocation){setDirStatus('<span style="font-size:22px">📍</span><span>Location not supported.</span>');return;}
+  navigator.geolocation.getCurrentPosition(
+    pos=>{userLat=pos.coords.latitude;userLng=pos.coords.longitude;document.getElementById('dir-from-label').textContent='Your current location';updateGmapsLink(userLat,userLng,m.lat,m.lng);updateUserMarker(userLat,userLng);fetchRoute();},
+    err=>{setDirStatus(`<span style="font-size:22px">📍</span><span>${err.code===1?'Location access denied.':'Could not get location.'}</span>`);document.getElementById('dir-from-label').textContent='Unavailable';},
+    {enableHighAccuracy:true,timeout:12000}
+  );
+}
+window.startDirections=startDirections;
+
+async function fetchRoute(){
+  if(!userLat||!userLng||!dirMSME)return;
+  setDirStatus('<div class="dir-spinner"></div><span>Calculating route…</span>');document.getElementById('start-nav-btn').style.display='none';
+  try{
+    const res=await fetch(`https://api.openrouteservice.org/v2/directions/${ORS_PROFILES[dirMode]}`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':ORS_KEY},body:JSON.stringify({coordinates:[[userLng,userLat],[dirMSME.lng,dirMSME.lat]],instructions:true,language:'en'})});
+    if(!res.ok)throw new Error('ORS '+res.status);
+    const data=await res.json();const route=data.routes[0];const seg=route.segments[0];
+    routeCoords=decodePolyline(route.geometry);routeSteps=seg.steps;currentStepIdx=0;spokenSteps=new Set();
+    if(routeLayer)map.removeLayer(routeLayer);
+    routeLayer=L.polyline(routeCoords,{color:'#1044A3',weight:5,opacity:.9,lineJoin:'round'}).addTo(map);
+    map.fitBounds(routeLayer.getBounds(),{padding:[50,50]});
+    document.getElementById('dir-summary').style.display='block';document.getElementById('dir-dist').textContent=fmtDist(route.summary.distance);document.getElementById('dir-time').textContent='~'+fmtTime(route.summary.duration);
+    const stepsEl=document.getElementById('dir-steps');stepsEl.innerHTML='';
+    routeSteps.forEach((step,i)=>{const div=document.createElement('div');div.className='step-item';div.id='step-'+i;div.innerHTML=`<div class="step-icon" id="step-icon-${i}">${getArrow(step.instruction)}</div><div class="step-body"><div class="step-text">${step.instruction}</div>${step.distance>0?`<div class="step-dist">${fmtDist(step.distance)}</div>`:''}</div>`;stepsEl.appendChild(div);});
+    document.getElementById('start-nav-btn').style.display='flex';document.getElementById('start-nav-text').textContent='🚗 Start Navigation';document.getElementById('start-nav-btn').className='start-nav-btn';
+  }catch(e){
+    if(routeLayer)map.removeLayer(routeLayer);
+    routeLayer=L.polyline([[userLat,userLng],[dirMSME.lat,dirMSME.lng]],{color:'#1044A3',weight:3,opacity:.6,dashArray:'8,6'}).addTo(map);
+    map.fitBounds([[userLat,userLng],[dirMSME.lat,dirMSME.lng]],{padding:[50,50]});
+    const d=haversine(userLat,userLng,dirMSME.lat,dirMSME.lng);
+    document.getElementById('dir-summary').style.display='block';document.getElementById('dir-dist').textContent=fmtDist(d*1000);document.getElementById('dir-time').textContent='Approx.';
+    setDirStatus('<span style="font-size:22px">🗺</span><span>Detailed route unavailable.<br>Use Google Maps below.</span>');
+  }
+}
+
+function setMode(m){dirMode=m;['car','bike','walk'].forEach(x=>document.getElementById('mode-'+x).classList.toggle('active',x===m));if(dirMSME)updateGmapsLink(userLat,userLng,dirMSME.lat,dirMSME.lng);if(userLat&&userLng&&dirMSME)fetchRoute();}
+window.setMode=setMode;
+
+function closeDirections(){if(isNavigating)stopNavigation();document.getElementById('dir-panel').classList.remove('open');document.getElementById('legend').classList.remove('shifted');if(routeLayer){map.removeLayer(routeLayer);routeLayer=null;}if(userMarker){map.removeLayer(userMarker);userMarker=null;}dirMSME=null;userLat=null;userLng=null;routeSteps=[];routeCoords=[];}
+window.closeDirections=closeDirections;
+
+function updateUserMarker(lat,lng){const icon=L.divIcon({html:`<div class="gps-dot-outer"><div class="gps-dot-inner"></div></div>`,className:'',iconSize:[20,20],iconAnchor:[10,10]});if(userMarker)map.removeLayer(userMarker);userMarker=L.marker([lat,lng],{icon,zIndexOffset:1000}).bindTooltip('📍 You are here').addTo(map);}
+
+function toggleNavigation(){if(isNavigating)stopNavigation();else startNavigation();}
+window.toggleNavigation=toggleNavigation;
+
+function startNavigation(){
+  if(!routeSteps.length){toast('Get directions first.','error');return;}
+  isNavigating=true;arrivedShown=false;
+  document.getElementById('nav-overlay').classList.add('active');
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('dir-panel').classList.remove('open');
+  document.getElementById('legend').style.display='none';
+  document.getElementById('header').style.display='none';
+  document.getElementById('nav-dest-chip').textContent=dirMSME.name;
+  document.getElementById('app').style.paddingTop='0';
+  document.getElementById('start-nav-btn').textContent='⏹ Stop Navigation';
+  document.getElementById('start-nav-btn').className='start-nav-btn navigating';
+  updateNavDisplay();
+  watchId=navigator.geolocation.watchPosition(pos=>{userLat=pos.coords.latitude;userLng=pos.coords.longitude;updateUserMarker(userLat,userLng);checkArrival();advanceStep();updateNavDisplay();},{},{ enableHighAccuracy:true,timeout:10000});
+}
+
+function stopNavigation(){
+  if(watchId){navigator.geolocation.clearWatch(watchId);watchId=null;}
+  isNavigating=false;
+  document.getElementById('nav-overlay').classList.remove('active');
+  document.getElementById('sidebar').style.display='';
+  document.getElementById('legend').style.display='';
+  document.getElementById('header').style.display='';
+  document.getElementById('app').style.paddingTop='';
+  document.getElementById('start-nav-btn').style.display='flex';
+  document.getElementById('start-nav-text').textContent='🚗 Start Navigation';
+  document.getElementById('start-nav-btn').className='start-nav-btn';
+}
+window.stopNavigation=stopNavigation;
+
+function checkArrival(){
+  if(arrivedShown||!dirMSME)return;
+  const d=haversine(userLat,userLng,dirMSME.lat,dirMSME.lng)*1000;
+  if(d<ARRIVE_RADIUS){arrivedShown=true;showArrived();}
+}
+function advanceStep(){
+  if(!routeSteps.length)return;
+  routeSteps.forEach((step,i)=>{
+    const wp=step.way_points;if(!wp||!routeCoords[wp[0]])return;
+    const c=routeCoords[wp[0]];
+    if(haversine(userLat,userLng,c[0],c[1])*1000<30)currentStepIdx=i;
+  });
+  document.querySelectorAll('.step-item').forEach((el,i)=>{el.classList.toggle('current',i===currentStepIdx);const ic=document.getElementById('step-icon-'+i);if(ic)ic.classList.toggle('active-step',i===currentStepIdx);});
+  const curr=document.getElementById('step-'+currentStepIdx);if(curr)curr.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function getStepCoord(si){const step=routeSteps[si];if(!step)return[userLat,userLng];const wp=step.way_points;if(!wp||!routeCoords[wp[0]])return[userLat,userLng];return routeCoords[wp[0]];}
+function updateNavDisplay(){
+  if(!routeSteps.length)return;
+  const curr=routeSteps[currentStepIdx];const next=routeSteps[currentStepIdx+1];if(!curr)return;
+  const[wLat,wLng]=getStepCoord(currentStepIdx);const distToTurn=haversine(userLat,userLng,wLat,wLng)*1000;
+  document.getElementById('nav-turn-arrow').textContent=getArrow(curr.instruction);
+  document.getElementById('nav-turn-dist-label').textContent=fmtDist(distToTurn);
+  document.getElementById('nav-turn-instruction').textContent=curr.instruction;
+  const roadMatch=curr.instruction.match(/onto (.+?)(?:,|$)/i)||curr.instruction.match(/ on (.+?)(?:,|$)/i);
+  document.getElementById('nav-turn-road-name').textContent=roadMatch?roadMatch[1]:'';
+  if(next){document.getElementById('nav-next-arrow').textContent=getArrow(next.instruction);document.getElementById('nav-next-text').textContent='Then: '+next.instruction;document.getElementById('nav-next-strip').style.display='flex';}else{document.getElementById('nav-next-strip').style.display='none';}
+  document.getElementById('nav-street-label').textContent=roadMatch?roadMatch[1]:curr.instruction;
+  const totalDist=haversine(userLat,userLng,dirMSME.lat,dirMSME.lng)*1000;
+  const speeds={car:50000,bike:15000,walk:5000};const etaMins=Math.round(totalDist/speeds[dirMode]*60);
+  document.getElementById('nav-eta-mins').textContent=etaMins<1?'<1 min':etaMins+' min';
+  document.getElementById('nav-eta-km').textContent=fmtDist(totalDist);
+  if(!spokenSteps.has(currentStepIdx)&&distToTurn<150){speak(curr.instruction);spokenSteps.add(currentStepIdx);}
+}
+function navRecenter(){if(userLat&&userLng)map.setView([userLat,userLng],17,{animate:true});}
+window.navRecenter=navRecenter;
+function showArrived(){stopNavigation();speak('You have arrived at '+dirMSME.name);document.getElementById('nav-arrived-name').textContent='Welcome to '+dirMSME.name+'!';document.getElementById('nav-arrived').style.display='block';setTimeout(()=>document.getElementById('nav-arrived').style.display='none',9000);}
+function speak(text){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-PH';u.rate=1;u.pitch=1;u.volume=1;window.speechSynthesis.speak(u);}
+function decodePolyline(encoded,precision=5){let idx=0,lat=0,lng=0;const coords=[];const f=Math.pow(10,precision);while(idx<encoded.length){let b,s=0,r=0;do{b=encoded.charCodeAt(idx++)-63;r|=(b&0x1f)<<s;s+=5;}while(b>=0x20);lat+=(r&1)?~(r>>1):(r>>1);s=r=0;do{b=encoded.charCodeAt(idx++)-63;r|=(b&0x1f)<<s;s+=5;}while(b>=0x20);lng+=(r&1)?~(r>>1):(r>>1);coords.push([lat/f,lng/f]);}return coords;}
+function haversine(la1,lo1,la2,lo2){const R=6371,dLat=(la2-la1)*Math.PI/180,dLon=(lo2-lo1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function copyTxt(t,n){navigator.clipboard.writeText(t).catch(()=>{});toast(`📋 Copied ${n}'s contact`,'success');}
+window.copyTxt=copyTxt;
+function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='show'+(type?' '+type:'');clearTimeout(t._t);t._t=setTimeout(()=>{t.className='';},3500);}
+function showLoading(v){document.getElementById('loading').style.display=v?'flex':'none';}
+function setLoadMsg(m){document.getElementById('load-msg').textContent=m;}
+function showSavingBar(v){document.getElementById('saving-bar').classList.toggle('active',v);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+
+// ═══════════════════════════════════════════
+// ADMIN AUTH
+// ═══════════════════════════════════════════
+const ADMIN_HASH = 'surallah2024'; // ← Change this password!
+let isAdmin = false;
+function showAdminLogin(){document.getElementById('admin-overlay').classList.add('open');document.getElementById('admin-pw').value='';document.getElementById('admin-err').style.display='none';document.getElementById('admin-pw').classList.remove('wrong');setTimeout(()=>document.getElementById('admin-pw').focus(),100);}
+function closeAdminLogin(){document.getElementById('admin-overlay').classList.remove('open');}
+function togglePwVis(){const inp=document.getElementById('admin-pw');inp.type=inp.type==='password'?'text':'password';}
+function doAdminLogin(){const pw=document.getElementById('admin-pw').value;if(pw===ADMIN_HASH){isAdmin=true;closeAdminLogin();enableAdminMode();toast('🛡 Admin mode activated','success');}else{document.getElementById('admin-err').style.display='block';document.getElementById('admin-pw').classList.add('wrong');setTimeout(()=>document.getElementById('admin-pw').classList.remove('wrong'),400);document.getElementById('admin-pw').value='';document.getElementById('admin-pw').focus();}}
+function enableAdminMode(){document.body.classList.add('admin-mode');document.getElementById('btn-add-msme').style.display='flex';document.getElementById('btn-admin-lock').style.display='none';document.getElementById('btn-admin-logout').style.display='flex';document.getElementById('admin-bar').classList.add('show');applyFilters();if(document.getElementById('detail').classList.contains('open')&&activeId)openDetail(activeId);}
+function adminLogout(){isAdmin=false;document.body.classList.remove('admin-mode');document.getElementById('btn-add-msme').style.display='none';document.getElementById('btn-admin-lock').style.display='flex';document.getElementById('btn-admin-logout').style.display='none';document.getElementById('admin-bar').classList.remove('show');applyFilters();if(document.getElementById('detail').classList.contains('open')&&activeId)openDetail(activeId);toast('🔒 Logged out of admin mode');}
+window.showAdminLogin=showAdminLogin;window.closeAdminLogin=closeAdminLogin;window.togglePwVis=togglePwVis;window.doAdminLogin=doAdminLogin;window.adminLogout=adminLogout;
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+document.getElementById('search').addEventListener('input',applyFilters);
+initMap();loadFromDB();
+</script>
+</body>
+</html>
+HTMLEOF
+echo "Done"
