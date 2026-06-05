@@ -618,7 +618,7 @@ body.admin-mode #legend{bottom:20px}
 // ═══════════════════════════════════════════
 // CONFIG — replace BIN_ID with a new JSONBin
 // ═══════════════════════════════════════════
-const BIN_ID  = '6a0fc5336610dd3ae88600f1'; // ← Create a new bin at jsonbin.io for Surallah
+const BIN_ID  = '6a223cc1da38895dfe8a2cb8'; // ← Create a new bin at jsonbin.io for Surallah
 const API_KEY = '$2a$10$a1e/AizzzXrdUaPhguiWJudsGiUD1d5rA0koAXOWFBrEybY.E6uki';
 const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 const JBIN_HEADERS = {'Content-Type':'application/json','X-Master-Key':API_KEY,'X-Bin-Versioning':'false'};
@@ -1132,7 +1132,7 @@ function escRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 // ═══════════════════════════════════════════
 // ADMIN AUTH
 // ═══════════════════════════════════════════
-const ADMIN_HASH = 'surallah2024'; // ← Change this password!
+const ADMIN_HASH = 'surallah'; // ← Change this password!
 let isAdmin = false;
 function showAdminLogin(){document.getElementById('admin-overlay').classList.add('open');document.getElementById('admin-pw').value='';document.getElementById('admin-err').style.display='none';document.getElementById('admin-pw').classList.remove('wrong');setTimeout(()=>document.getElementById('admin-pw').focus(),100);}
 function closeAdminLogin(){document.getElementById('admin-overlay').classList.remove('open');}
